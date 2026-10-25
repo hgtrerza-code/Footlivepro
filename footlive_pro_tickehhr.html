@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FootLive Pro | Résultats & Scores en Direct</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0f1e; 
+            --bg-card: #1a2332; 
+            --bg-card-hover: #232f42; 
+            --bg-detail: #141c2b;
+            --text-main: #f8fafc; 
+            --text-muted: #8b9bb4; 
+            --accent: #22c55e; 
+            --live-red: #ef4444;
+            --border: #2a3650;
+            --yellow: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-main); line-height: 1.5; min-height: 100vh; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+
+        header { background: linear-gradient(90deg, #0a0f1e 0%, #1a2332 100%); border-bottom: 1px solid var(--border); padding: 1rem 0; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+        .highlight { color: var(--accent); }
+        
+        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .status-badge { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--live-red); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; background: rgba(239, 68, 68, 0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .pulse { width: 8px; height: 8px; background-color: var(--live-red); border-radius: 50%; animation: pulse-animation 1.5s infinite; }
+        @keyframes pulse-animation { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,.7); } 70% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+
+        .btn-action { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+        .btn-action:hover { background: var(--bg-card-hover); border-color: var(--accent); }
+        .btn-accent { background: var(--accent); color: #000; border-color: var(--accent); }
+        .btn-accent:hover { background: #16a34a; border-color: #16a34a; transform: translateY(-1px); }
+
+        .stats-bar { display: flex; gap: 18px; padding: .75rem 1rem; background: var(--bg-card); border-radius: 10px; margin: 1rem 0; font-size: .8rem; color: var(--text-muted); flex-wrap: wrap; border: 1px solid var(--border); }
+        .stats-bar strong { color: var(--accent); }
+
+        .control-group { margin: 1.2rem 0; display: flex; flex-direction: column; gap: 10px; }
+        .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filters button { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: all .2s; font-weight: 600; font-size: .8rem; font-family: inherit; }
+        .filters button.active, .filters button:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .region-select { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-family: inherit; outline: none; cursor: pointer; }
+
+        .search-box { margin-top: 5px; }
+        .search-box input { width: 100%; padding: 10px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-family: inherit; font-size: .9rem; outline: none; transition: border-color .2s; }
+        .search-box input:focus { border-color: var(--accent); }
+
+        .toast { position: fixed; bottom: 20px; right: 20px; background: rgba(34, 197, 94, 0.95); color: #000; padding: 12px 18px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; gap: 8px; transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        .competition-group { margin-bottom: 1.5rem; animation: fadeIn .4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .competition-header { font-size: .8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding: .5rem 0; border-bottom: 1px solid var(--border); margin-bottom: .75rem; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+        .competition-header .flag { font-size: 1rem; }
+        .competition-header .count { margin-left: auto; background: var(--bg-card); padding: 2px 8px; border-radius: 10px; font-size: .7rem; text-transform: none; border: 1px solid var(--border); }
+
+        .match-card { background: var(--bg-card); border-radius: 10px; margin-bottom: 8px; border: 1px solid transparent; transition: all .2s; overflow: hidden; }
+        .match-card:hover { border-color: var(--border); background: var(--bg-card-hover); }
+        .match-card.live { border-left: 4px solid var(--live-red); }
+        .match-main { padding: .85rem 1rem; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; cursor: pointer; }
+        .team { font-weight: 600; font-size: .95rem; display: flex; align-items: center; gap: 10px; }
+        .team.away { justify-content: flex-end; text-align: right; }
+        .team-logo { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #334155, #475569); display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 700; flex-shrink: 0; color: #fff; }
+        
+        .score-box { display: flex; flex-direction: column; align-items: center; min-width: 110px; }
+        .score { font-size: 1.15rem; font-weight: 800; background: rgba(255,255,255,.05); padding: 3px 14px; border-radius: 6px; letter-spacing: 1.5px; min-width: 75px; text-align: center; }
+        .live .score { color: var(--accent); background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.2); }
+        .match-time { font-size: .7rem; color: var(--text-muted); margin-top: 4px; font-weight: 600; }
+        .live .match-time { color: var(--live-red); }
+        
+        .progress { width: 100%; height: 4px; background: rgba(255,255,255,.08); border-radius: 3px; margin-top: 5px; overflow: hidden; }
+        .progress > div { height: 100%; background: var(--live-red); transition: width .5s ease-in-out; }
+        .minute-badge { color: var(--live-red); font-weight: 800; }
+
+        .match-details { display: none; background: var(--bg-detail); padding: 1rem; border-top: 1px solid var(--border); font-size: .8rem; }
+        .match-card.expanded .match-details { display: block; }
+        
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin-bottom: .75rem; }
+        .detail-item { display: flex; gap: 8px; color: var(--text-muted); }
+        .detail-item strong { color: var(--text-main); font-weight: 600; }
+
+        .section-title { font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: .9rem 0 .5rem; font-weight: 700; }
+        
+        .events-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+        .event-item { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; }
+        .event-min { font-weight: 700; color: var(--accent); min-width: 26px; }
+        .event-icon { font-size: 0.85rem; }
+
+        .bar-row { margin: 7px 0; font-size: .75rem; }
+        .bar-row .vals { display: flex; justify-content: space-between; font-weight: 700; }
+        .bar-row .lbl { color: var(--text-muted); font-weight: 500; }
+        .bar { display: flex; height: 5px; border-radius: 3px; overflow: hidden; background: var(--border); margin-top: 3px; }
+        .bar .h { background: var(--accent); transition: width 0.4s; }
+        .bar .a { background: #3b82f6; transition: width 0.4s; }
+
+        .empty { text-align: center; color: var(--text-muted); padding: 3rem 0; background: var(--bg-card); border-radius: 10px; border: 1px dashed var(--border); margin-top: 1rem; }
+        footer { border-top: 1px solid var(--border); padding: 1.5rem 0; text-align: center; color: var(--text-muted); font-size: .8rem; margin-top: 3rem; }
+
+        .standings-btn, .follow-btn { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); padding: 3px 11px; border-radius: 12px; font-size: .7rem; font-weight: 700; cursor: pointer; font-family: inherit; text-transform: none; letter-spacing: 0; }
+        .standings-btn:hover, .follow-btn:hover { border-color: var(--accent); color: var(--text-main); }
+        .standings { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: .5rem; margin-bottom: .75rem; overflow-x: auto; }
+        .standings table { width: 100%; border-collapse: collapse; font-size: .75rem; margin-bottom: .5rem; min-width: 440px; }
+        .standings caption { text-align: left; color: var(--text-muted); font-weight: 700; padding: 4px 6px; text-transform: uppercase; font-size: .65rem; letter-spacing: 1px; }
+        .standings th { color: var(--text-muted); font-weight: 600; text-align: center; padding: 4px 6px; border-bottom: 1px solid var(--border); }
+        .standings td { text-align: center; padding: 5px 6px; border-bottom: 1px solid rgba(128,128,128,.12); }
+        .standings th:nth-child(2), .standings td:nth-child(2) { text-align: left; }
+        .standings td.pts { font-weight: 800; }
+        .standings tr.playing td { background: rgba(34,197,94,.1); }
+        .form span { display: inline-block; width: 16px; height: 16px; line-height: 16px; border-radius: 50%; font-size: .6rem; font-weight: 800; color: #000; margin-right: 2px; }
+        .form .V { background: var(--accent); } .form .N { background: var(--yellow); } .form .D { background: var(--live-red); color: #fff; }
+        .team-logo.has-img { background: #fff; padding: 2px; }
+        .team-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .ticker { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; margin-top: .75rem; display: flex; align-items: stretch; overflow: hidden; width: 100%; }
+        .ticker-label { flex: 0 0 auto; background: var(--live-red); color: #fff; font-weight: 800; font-size: .7rem; letter-spacing: 1px; text-transform: uppercase; padding: 6px 12px; display: flex; align-items: center; gap: 6px; z-index: 1; }
+        .ticker-label .pulse { background-color: #fff; }
+        .ticker-viewport { flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%); -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%); }
+        .ticker-track { display: inline-flex; white-space: nowrap; will-change: transform; animation: ticker-scroll var(--ticker-duration, 60s) linear infinite; }
+        .ticker:hover .ticker-track { animation-play-state: paused; }
+        .ticker-item { display: inline-flex; align-items: center; gap: 6px; padding: 6px 18px; font-size: .8rem; font-weight: 600; color: var(--text-main); border-right: 1px solid var(--border); }
+        .ticker-item .t-comp { color: var(--text-muted); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+        .ticker-item .t-score { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.2); color: var(--accent); border-radius: 6px; padding: 0 8px; font-weight: 800; }
+        .ticker-item .t-live { color: var(--live-red); font-weight: 800; font-size: .7rem; }
+        .ticker-item .t-info { color: var(--yellow); font-weight: 700; }
+        @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } .ticker-viewport { overflow-x: auto; } }
+        .video-wrap { position: relative; padding-top: 56.25%; margin-bottom: 8px; }
+        .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 8px; }
+        .goal-video { margin-left: auto; background: var(--accent); color: #000; font-weight: 700; font-size: .68rem; padding: 2px 9px; border-radius: 10px; text-decoration: none; white-space: nowrap; }
+        .goal-video:hover { background: #16a34a; }
+        .detail-item.lineup { flex-direction: column; gap: 2px; line-height: 1.5; }
+
+
+        @media (max-width: 600px) {
+            .team { font-size: .85rem; }
+            .score { font-size: 1rem; }
+            .details-grid { grid-template-columns: 1fr; }
+            .match-main { padding: .75rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-content">
+            <h1>⚽ FootLive <span class="highlight">Pro</span></h1>
+            <div class="header-actions">
+                <div class="status-badge"><span class="pulse"></span> EN DIRECT</div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="ticker" id="ticker" aria-label="Actualités du football mondial">
+                <div class="ticker-label"><span class="pulse"></span> Foot News</div>
+                <div class="ticker-viewport"><div class="ticker-track" id="ticker-track"><span class="ticker-item">Chargement des infos du football mondial…</span></div></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="stats-bar" id="stats-bar">Chargement des statistiques...</div>
+
+        <div class="control-group">
+            <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                <div class="filters" id="filters">
+                    <button class="active" data-filter="all">Tous les matchs</button>
+                    <button data-filter="LIVE">🔴 En direct</button>
+                    <button data-filter="UPCOMING">📅 À venir</button>
+                    <button data-filter="FINISHED">🏁 Terminés</button>
+                </div>
+                <select class="region-select" id="region-filter">
+                    <option value="all">🌍 Toutes les régions</option>
+                    <option value="Europe">🇪🇺 Europe</option>
+                    <option value="Americas">🌎 Amériques</option>
+                    <option value="AsiaAfrica">🌍 Afrique & Asie</option>
+                    <option value="International">🏆 International</option>
+                </select>
+            </div>
+            <div class="search-box">
+                <input type="text" id="search" placeholder="🔍 Rechercher une équipe, une ligue ou un pays...">
+            </div>
+        </div>
+
+        <div id="competitions-container"></div>
+    </main>
+
+    <div class="toast" id="toast">
+        <span>⚽</span> <span id="toast-text">BUT !</span>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>FootLive Pro © 2026 — <span id="updated"></span> · Les scores et chronomètres se mettent à jour automatiquement en temps réel.</p>
+        </div>
+    </footer>
+
+    <script>
+        // 60 Compétitions Mondiales
+        const competitions = {
+            // Europe (UEFA)
+            UCL: { name: "Ligue des Champions UEFA", flag: "🇪🇺", region: "Europe", priority: 1 },
+            UEL: { name: "Europa League", flag: "🇪🇺", region: "Europe", priority: 2 },
+            UECL: { name: "Conference League", flag: "🇪🇺", region: "Europe", priority: 3 },
+            EPL: { name: "Premier League (Angleterre)", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", region: "Europe", priority: 4 },
+            LAL: { name: "LaLiga (Espagne)", flag: "🇪🇸", region: "Europe", priority: 5 },
+            SEA: { name: "Serie A (Italie)", flag: "🇮🇹", region: "Europe", priority: 6 },
+            BUN: { name: "Bundesliga (Allemagne)", flag: "🇩🇪", region: "Europe", priority: 7 },
+            L1:  { name: "Ligue 1 (France)", flag: "🇫🇷", region: "Europe", priority: 8 },
+            ERE: { name: "Eredivisie (Pays-Bas)", flag: "🇳🇱", region: "Europe", priority: 9 },
+            PRI: { name: "Primeira Liga (Portugal)", flag: "🇵🇹", region: "Europe", priority: 10 },
+            BEL: { name: "Jupiler Pro League (Belgique)", flag: "🇧🇪", region: "Europe", priority: 11 },
+            TUR: { name: "Süper Lig (Turquie)", flag: "🇹🇷", region: "Europe", priority: 12 },
+            SCO: { name: "Premiership (Écosse)", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", region: "Europe", priority: 13 },
+            SUI: { name: "Super League (Suisse)", flag: "🇨🇭", region: "Europe", priority: 14 },
+            AUT: { name: "Bundesliga (Autriche)", flag: "🇦🇹", region: "Europe", priority: 15 },
+            GRE: { name: "Super League (Grèce)", flag: "🇬🇷", region: "Europe", priority: 16 },
+            DEN: { name: "Superliga (Danemark)", flag: "🇩🇰", region: "Europe", priority: 17 },
+            CZE: { name: "First League (Tchéquie)", flag: "🇨🇿", region: "Europe", priority: 18 },
+            POL: { name: "Ekstraklasa (Pologne)", flag: "🇵🇱", region: "Europe", priority: 19 },
+            UKR: { name: "Premier League (Ukraine)", flag: "🇺🇦", region: "Europe", priority: 20 },
+            
+            // Afrique & Asie
+            BOT: { name: "Botola Pro Inwi (Maroc)", flag: "🇲🇦", region: "AsiaAfrica", priority: 21 },
+            L1A: { name: "Ligue 1 (Algérie)", flag: "🇩🇿", region: "AsiaAfrica", priority: 22 },
+            L1T: { name: "Ligue 1 (Tunisie)", flag: "🇹🇳", region: "AsiaAfrica", priority: 23 },
+            EGY: { name: "Premier League (Égypte)", flag: "🇪🇬", region: "AsiaAfrica", priority: 24 },
+            SPL: { name: "Saudi Pro League (Arabie Saoudite)", flag: "🇸🇦", region: "AsiaAfrica", priority: 25 },
+            CAF: { name: "Ligue des Champions CAF", flag: "🌍", region: "AsiaAfrica", priority: 26 },
+            CCC: { name: "Coupe de la Confédération CAF", flag: "🌍", region: "AsiaAfrica", priority: 27 },
+            AFC: { name: "AFC Champions League (Asie)", flag: "🌏", region: "AsiaAfrica", priority: 28 },
+            J1:  { name: "J1 League (Japon)", flag: "🇯🇵", region: "AsiaAfrica", priority: 29 },
+            K1:  { name: "K League 1 (Corée du Sud)", flag: "🇰🇷", region: "AsiaAfrica", priority: 30 },
+            UAE: { name: "Pro League (Émirats Arabes Unis)", flag: "🇦🇪", region: "AsiaAfrica", priority: 31 },
+            QAT: { name: "Stars League (Qatar)", flag: "🇶🇦", region: "AsiaAfrica", priority: 32 },
+            RSA: { name: "PSL (Afrique du Sud)", flag: "🇿🇦", region: "AsiaAfrica", priority: 33 },
+            NGA: { name: "NPFL (Nigeria)", flag: "🇳🇬", region: "AsiaAfrica", priority: 34 },
+
+            // Amériques
+            MLS: { name: "MLS (États-Unis)", flag: "🇺🇸", region: "Americas", priority: 35 },
+            BRA: { name: "Brasileirão Série A (Brésil)", flag: "🇧🇷", region: "Americas", priority: 36 },
+            ARG: { name: "Liga Profesional (Argentine)", flag: "🇦🇷", region: "Americas", priority: 37 },
+            MEX: { name: "Liga MX (Mexique)", flag: "🇲🇽", region: "Americas", priority: 38 },
+            LIB: { name: "Copa Libertadores", flag: "🌎", region: "Americas", priority: 39 },
+            SUD: { name: "Copa Sudamericana", flag: "🌎", region: "Americas", priority: 40 },
+            COL: { name: "Categoría Primera A (Colombie)", flag: "🇨🇴", region: "Americas", priority: 41 },
+            CHI: { name: "Primera División (Chili)", flag: "🇨🇱", region: "Americas", priority: 42 },
+            URU: { name: "Primera División (Uruguay)", flag: "🇺🇾", region: "Americas", priority: 43 },
+            PER: { name: "Liga 1 (Pérou)", flag: "🇵🇪", region: "Americas", priority: 44 },
+
+            // International
+            WCU: { name: "Qualifications Coupe du Monde", flag: "🌐", region: "International", priority: 45 },
+            UNL: { name: "UEFA Nations League", flag: "🇪🇺", region: "International", priority: 46 },
+            CAN: { name: "Coupe d'Afrique des Nations", flag: "🌍", region: "International", priority: 47 },
+            ASI: { name: "Coupe d'Asie des Nations", flag: "🌏", region: "International", priority: 48 },
+            COP: { name: "Copa América", flag: "🌎", region: "International", priority: 49 },
+            FRI: { name: "Matchs Amicaux Internationaux", flag: "🤝", region: "International", priority: 50 },
+
+            // Coupes & divisions européennes supplémentaires
+            CHA: { name: "Championship (Angleterre D2)", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", region: "Europe", priority: 51 },
+            FAC: { name: "FA Cup (Angleterre)", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", region: "Europe", priority: 52 },
+            CDR: { name: "Copa del Rey (Espagne)", flag: "🇪🇸", region: "Europe", priority: 53 },
+            LL2: { name: "LaLiga 2 (Espagne)", flag: "🇪🇸", region: "Europe", priority: 54 },
+            CIT: { name: "Coppa Italia (Italie)", flag: "🇮🇹", region: "Europe", priority: 55 },
+            SEB: { name: "Serie B (Italie)", flag: "🇮🇹", region: "Europe", priority: 56 },
+            DFB: { name: "DFB-Pokal (Allemagne)", flag: "🇩🇪", region: "Europe", priority: 57 },
+            BU2: { name: "2. Bundesliga (Allemagne)", flag: "🇩🇪", region: "Europe", priority: 58 },
+            CDF: { name: "Coupe de France", flag: "🇫🇷", region: "Europe", priority: 59 },
+            L2F: { name: "Ligue 2 (France)", flag: "🇫🇷", region: "Europe", priority: 60 }
+        };
+
+        // ===== CONFIGURATION =====
+        const CONFIG = {
+            API_BASE: "https://v3.football.api-sports.io", // ou l'URL de votre proxy (recommandé, voir worker.js)
+            API_KEY: "aa2cd087cd4d796775431a06c99592d5",                                    // clé API-Football (laisser vide si vous utilisez un proxy)
+            LIVE_REFRESH_MS: 30000,                         // scores en direct
+            DAY_REFRESH_MS: 300000,                         // programme du jour
+            VIDEO_FEED_URL: "",   // flux de résumés vidéo autorisé (ex. Scorebat) : vide = désactivé
+            VIDEO_HEADERS: {}     // en-têtes éventuels du flux (clé RapidAPI, etc.)
+        };
+
+        // Identifiants API-Football de chaque compétition
+        const LEAGUE_IDS = {
+            UCL:2, UEL:3, UECL:848, EPL:39, LAL:140, SEA:135, BUN:78, L1:61, ERE:88, PRI:94, BEL:144, TUR:203, SCO:179, SUI:207, AUT:218, GRE:197, DEN:119, CZE:345, POL:106, UKR:333,
+            BOT:200, L1A:186, L1T:202, EGY:233, SPL:307, CAF:12, CCC:20, AFC:17, J1:98, K1:292, UAE:301, QAT:305, RSA:288, NGA:332,
+            MLS:253, BRA:71, ARG:128, MEX:262, LIB:13, SUD:11, COL:239, CHI:265, URU:268, PER:281,
+            WCU:[32,29,30,34,31], UNL:5, CAN:6, ASI:7, COP:9, FRI:10,
+            CHA:40, FAC:45, CDR:143, LL2:141, CIT:137, SEB:136, DFB:81, BU2:79, CDF:66, L2F:62
+        };
+        const ID_TO_COMP = {};
+        Object.entries(LEAGUE_IDS).forEach(([k, v]) => [].concat(v).forEach(id => ID_TO_COMP[id] = k));
+        const ALL_IDS = Object.keys(ID_TO_COMP);
+
+        const byId = new Map();
+        let matchesData = [];
+        let expanded = new Set();
+        let currentFilter = "all";
+        let lastError = "";
+        let busy = false;
+
+        const LIVE_CODES = ["1H", "HT", "2H", "ET", "BT", "P", "INT", "LIVE"];
+        const DONE_CODES = ["FT", "AET", "PEN"];
+        const NOT_PLAYED = { PST: "Reporté", CANC: "Annulé", SUSP: "Suspendu", ABD: "Abandonné" };
+        const EVENT_FR = { "Normal Goal": "But", "Own Goal": "But contre son camp", "Penalty": "But sur penalty", "Missed Penalty": "Penalty manqué", "Yellow Card": "Carton jaune", "Red Card": "Carton rouge", "Second Yellow card": "Second jaune" };
+
+        function showToast(text) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toast-text").textContent = text;
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 3500);
+        }
+
+        const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        const initials = n => esc(n.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase());
+
+        function liveClock(x) {
+            const e = x.elapsed;
+            return { label: x.code === "HT" ? "Mi-temps" : `${e}'`, pct: Math.min(e, 90) / 90 * 100 };
+        }
+
+        function kickoff(x) {
+            return NOT_PLAYED[x.code] || new Date(x.start).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+        }
+
+        const standings = {}, standingsOpen = new Set(), compLeagues = {}, followed = new Set();
+        const notifOn = true; // alertes de but toujours actives
+
+        const STAT_FR = [["Ball Possession", "Possession", true], ["Total Shots", "Tirs"], ["Shots on Goal", "Tirs cadrés"], ["Corner Kicks", "Corners"], ["Fouls", "Fautes"], ["Offsides", "Hors-jeu"], ["Yellow Cards", "Cartons jaunes"], ["Red Cards", "Cartons rouges"], ["Goalkeeper Saves", "Arrêts"], ["Total passes", "Passes"], ["Passes %", "Précision des passes", true]];
+
+        const logo = (url, name) => url
+            ? `<span class="team-logo has-img"><img src="${esc(url)}" alt="${initials(name)}" loading="lazy" onerror="this.parentNode.classList.remove('has-img');this.parentNode.textContent=this.alt"></span>`
+            : `<span class="team-logo">${initials(name)}</span>`;
+
+        function notifyGoal(m) {
+            if (!notifOn || (followed.size && !followed.has(m.id))) return;
+            const g = [...m.events].reverse().find(e => e.type === "⚽");
+            const title = `⚽ BUT ! ${m.home} ${m.scoreHome}-${m.scoreAway} ${m.away}`;
+            showToast(`${title} (${m.elapsed}')`);
+            try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+            try {
+                if ("Notification" in window && Notification.permission === "granted") {
+                    new Notification(title, { body: `${competitions[m.comp].name} · ${m.elapsed}'${g ? " · " + g.text : ""}` });
+                }
+            } catch (e) {}
+        }
+
+        async function loadStandings(comp) {
+            const cur = standings[comp];
+            if (cur && Date.now() - cur.at < 600000) return;
+            const st = standings[comp] = { at: Date.now(), groups: cur ? cur.groups : null };
+            const leagues = compLeagues[comp] || {};
+            try {
+                const out = [];
+                for (const id of Object.keys(leagues)) {
+                    const r = await api(`/standings?league=${id}&season=${leagues[id]}`);
+                    r.forEach(x => (x.league.standings || []).forEach(g => out.push(g)));
+                }
+                st.groups = out;
+                st.error = "";
+            } catch (e) { st.error = e.message; }
+            render();
+        }
+
+        function standingsHTML(k) {
+            const st = standings[k];
+            if (!st || (!st.groups && !st.error)) return `<div class="empty">Chargement du classement…</div>`;
+            if (st.error) return `<div class="empty">⚠️ ${esc(st.error)}</div>`;
+            if (!st.groups.length) return `<div class="empty">Classement indisponible pour cette compétition.</div>`;
+            const today = new Set(matchesData.filter(m => m.comp === k).flatMap(m => [m.home, m.away]));
+            const FORM = { W: "V", D: "N", L: "D" };
+            return `<div class="standings">` + st.groups.map(g => `
+                <table>
+                    ${st.groups.length > 1 && g[0] && g[0].group ? `<caption>${esc(g[0].group)}</caption>` : ""}
+                    <thead><tr><th>#</th><th>Équipe</th><th>J</th><th>G</th><th>N</th><th>P</th><th>Diff</th><th>Pts</th><th>Forme</th></tr></thead>
+                    <tbody>${g.map(r => `
+                        <tr class="${today.has(r.team.name) ? "playing" : ""}" ${r.description ? `title="${esc(r.description)}"` : ""}>
+                            <td>${r.rank}</td><td>${esc(r.team.name)}</td><td>${r.all.played}</td><td>${r.all.win}</td><td>${r.all.draw}</td><td>${r.all.lose}</td>
+                            <td>${r.goalsDiff > 0 ? "+" : ""}${r.goalsDiff}</td><td class="pts">${r.points}</td>
+                            <td class="form">${(r.form || "").slice(-5).split("").map(ch => `<span class="${FORM[ch] || ""}">${FORM[ch] || ""}</span>`).join("")}</td>
+                        </tr>`).join("")}
+                    </tbody>
+                </table>`).join("") + `</div>`;
+        }
+
+        // ===== RÉSUMÉS VIDÉO (optionnel, flux autorisé uniquement) =====
+        let videoFeed = [], videoAt = 0;
+        const norm = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ");
+        const toks = t => norm(t).split(" ").filter(w => w.length >= 4);
+        const sameTeam = (a, b) => { const B = toks(b); return toks(a).some(w => B.includes(w)); };
+        async function loadVideos() {
+            if (!CONFIG.VIDEO_FEED_URL || Date.now() - videoAt < 300000) return;
+            videoAt = Date.now();
+            try {
+                const r = await fetch(CONFIG.VIDEO_FEED_URL, { headers: CONFIG.VIDEO_HEADERS });
+                const j = await r.json();
+                videoFeed = Array.isArray(j) ? j : (j.response || []);
+                render();
+            } catch (e) { /* flux indisponible */ }
+        }
+        function videoFor(x) {
+            const it = videoFeed.find(v => v.side1 && v.side2 && ((sameTeam(v.side1.name, x.home) && sameTeam(v.side2.name, x.away)) || (sameTeam(v.side1.name, x.away) && sameTeam(v.side2.name, x.home))));
+            if (!it) return "";
+            const frames = (it.videos && it.videos.length ? it.videos : [it]).map(v => {
+                const m = /src=['"](https:\/\/[^'"]+)['"]/.exec(v.embed || "");
+                if (!m) return "";
+                try { if (!/(^|\.)scorebat\.com$/.test(new URL(m[1]).hostname)) return ""; } catch (e) { return ""; }
+                return `<div class="video-wrap"><iframe src="${esc(m[1])}" allowfullscreen loading="lazy"></iframe></div>`;
+            }).join("");
+            return frames ? `<div class="section-title">Résumé vidéo</div>${frames}` : "";
+        }
+
+        // ===== COUCHE DONNÉES (API-Football) =====
+        async function api(path) {
+            const r = await fetch(CONFIG.API_BASE + path, { headers: CONFIG.API_KEY ? { "x-apisports-key": CONFIG.API_KEY } : {} });
+            if (!r.ok) throw new Error("Erreur réseau " + r.status);
+            const j = await r.json();
+            const err = Array.isArray(j.errors) ? null : Object.values(j.errors || {})[0];
+            if (err) throw new Error(err);
+            return j.response || [];
+        }
+
+        function mapEvents(evs) {
+            return evs.map(e => {
+                const d = e.detail || "", t = e.type;
+                const icon = t === "Goal" ? (d === "Missed Penalty" ? "❌" : "⚽") : t === "Card" ? (d.includes("Red") ? "🟥" : "🟨") : t === "subst" ? "🔄" : "📺";
+                const who = e.player && e.player.name ? e.player.name : "";
+                const sub = t === "subst" && e.assist && e.assist.name ? ` ➜ ${e.assist.name}` : "";
+                return { goal: t === "Goal" && d !== "Missed Penalty", who, min: e.time.elapsed + (e.time.extra ? "+" + e.time.extra : ""), type: icon, text: `${t === "subst" ? "Remplacement" : (EVENT_FR[d] || d)} — ${who}${sub} (${e.team ? e.team.name : ""})` };
+            });
+        }
+
+        function mapFixture(f, comp) {
+            const s = f.fixture.status.short;
+            const old = byId.get(f.fixture.id) || {};
+            return {
+                id: f.fixture.id, comp, code: s,
+                home: f.teams.home.name, away: f.teams.away.name, homeId: f.teams.home.id,
+                scoreHome: f.goals.home ?? 0, scoreAway: f.goals.away ?? 0,
+                status: LIVE_CODES.includes(s) ? "LIVE" : DONE_CODES.includes(s) ? "FINISHED" : "UPCOMING",
+                elapsed: f.fixture.status.elapsed ?? 0,
+                start: f.fixture.date,
+                round: f.league.round, venue: f.fixture.venue || {}, referee: f.fixture.referee,
+                ht: f.score && f.score.halftime, homeLogo: f.teams.home.logo, awayLogo: f.teams.away.logo,
+                events: f.events ? mapEvents(f.events) : (old.events || []),
+                stats: old.stats, lineups: old.lineups, statsAt: old.statsAt || 0
+            };
+        }
+
+        function upsert(list) {
+            list.forEach(f => {
+                const comp = ID_TO_COMP[f.league.id];
+                if (!comp) return;
+                (compLeagues[comp] ||= {})[f.league.id] = f.league.season;
+                const m = mapFixture(f, comp), old = byId.get(m.id);
+                if (old && m.status === "LIVE" && m.scoreHome + m.scoreAway > old.scoreHome + old.scoreAway) {
+                    notifyGoal(m);
+                }
+                byId.set(m.id, m);
+            });
+            matchesData = [...byId.values()].sort((a, b) => new Date(a.start) - new Date(b.start));
+        }
+
+        async function refreshDay() {
+            const day = new Date().toLocaleDateString("sv-SE");
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            upsert(await api(`/fixtures?date=${day}&timezone=${encodeURIComponent(tz)}`));
+        }
+
+        async function refreshLive() {
+            const list = await api(`/fixtures?live=${ALL_IDS.join("-")}`);
+            const liveIds = new Set(list.map(f => f.fixture.id));
+            const dropped = matchesData.some(m => m.status === "LIVE" && !liveIds.has(m.id));
+            upsert(list);
+            if (dropped) await refreshDay(); // un match vient de se terminer
+        }
+
+        // Ne scrute le direct que si un match est en cours ou démarre bientôt (économise le quota)
+        function liveWindowOpen() {
+            const now = Date.now();
+            return matchesData.some(m => m.status === "LIVE" || (m.status === "UPCOMING" && !NOT_PLAYED[m.code] && new Date(m.start) - now < 600000 && new Date(m.start) - now > -3600000));
+        }
+
+        async function refreshAll(kind) {
+            if (busy || (document.hidden && kind !== "manual")) return;
+            if (!CONFIG.API_KEY && CONFIG.API_BASE.includes("api-sports.io")) {
+                lastError = "Clé API manquante : renseignez CONFIG.API_KEY (ou un proxy)";
+                render();
+                return;
+            }
+            busy = true;
+            try {
+                if (kind !== "live" || !byId.size) await refreshDay();
+                if (kind === "manual" || (kind === "live" && liveWindowOpen())) await refreshLive();
+                lastError = "";
+                expanded.forEach(id => loadStats(id));
+                standingsOpen.forEach(k => loadStandings(k));
+            } catch (e) {
+                lastError = e.message;
+                showToast("⚠️ " + e.message);
+            }
+            busy = false;
+            render();
+        }
+
+        async function loadStats(id) {
+            const m = byId.get(id);
+            if (!m || Date.now() - m.statsAt < 60000) return;
+            m.statsAt = Date.now();
+            try {
+                if (m.status !== "UPCOMING") {
+                    const r = await api(`/fixtures/statistics?fixture=${id}`);
+                    const H = r.find(t => t.team.id === m.homeId), A = r.find(t => t.team.id !== m.homeId);
+                    const val = (t, k) => { const x = t.statistics.find(z => z.type === k); return x && x.value != null ? (parseInt(x.value) || 0) : 0; };
+                    m.stats = H && A ? STAT_FR.map(([k, label, pct]) => ({ label, pct, h: val(H, k), a: val(A, k) })).filter(t => t.h + t.a > 0) : [];
+                }
+                if (!m.lineups || m.status === "UPCOMING") {
+                    const r = await api(`/fixtures/lineups?fixture=${id}`);
+                    const H = r.find(t => t.team.id === m.homeId), A = r.find(t => t.team.id !== m.homeId);
+                    const f = t => ({ formation: t.formation, coach: t.coach && t.coach.name, xi: (t.startXI || []).map(p => `${p.player.number}. ${p.player.name}`) });
+                    if (H && A) m.lineups = { home: f(H), away: f(A) };
+                }
+            } catch (e) { /* détails indisponibles */ }
+            render();
+        }
+
+        function renderMatch(x) {
+            const isLive = x.status === "LIVE";
+            const showScore = x.status !== "UPCOMING";
+            const c = competitions[x.comp];
+
+            const eventsHTML = x.events && x.events.length 
+                ? x.events.map(e => `<div class="event-item"><span class="event-min">${e.min}'</span><span class="event-icon">${e.type}</span><span>${esc(e.text)}</span>${e.goal ? `<a class="goal-video" target="_blank" rel="noopener noreferrer" href="https://www.youtube.com/results?search_query=${encodeURIComponent(`${e.who} goal ${x.home} ${x.away}`)}">▶️ Voir le but</a>` : ""}</div>`).join("")
+                : `<div style="color:var(--text-muted);font-size:0.75rem;">Aucun événement majeur pour le moment</div>`;
+
+            const bars = x.stats
+                ? (x.stats.length ? x.stats.map(t => { const sum = (t.h + t.a) || 1; const u = t.pct ? "%" : ""; return `<div class="bar-row"><div class="vals"><span>${t.h}${u}</span><span class="lbl">${t.label}</span><span>${t.a}${u}</span></div><div class="bar"><div class="h" style="width:${t.h / sum * 100}%"></div><div class="a" style="width:${t.a / sum * 100}%"></div></div></div>`; }).join("") : `<div style="color:var(--text-muted);font-size:0.75rem;">Statistiques indisponibles pour ce match</div>`)
+                : `<div style="color:var(--text-muted);font-size:0.75rem;">${x.status === "UPCOMING" ? "Statistiques disponibles au coup d'envoi" : "Chargement des statistiques…"}</div>`;
+            const lu = x.lineups ? `<div class="section-title">Compositions</div><div class="details-grid">${["home", "away"].map(side => { const t = x.lineups[side]; return `<div class="detail-item lineup"><span><strong>${esc(side === "home" ? x.home : x.away)}</strong> ${esc(t.formation || "")}</span><span>${t.xi.map(esc).join(" · ")}</span><span>Entraîneur : ${esc(t.coach || "—")}</span></div>`; }).join("")}</div>` : "";
+            const extra = [
+                x.round ? `<div class="detail-item">🗓️ <strong>${esc(x.round)}</strong></div>` : "",
+                x.venue && x.venue.name ? `<div class="detail-item">🏟️ Stade : <strong>${esc(x.venue.name)}${x.venue.city ? ", " + esc(x.venue.city) : ""}</strong></div>` : "",
+                x.referee ? `<div class="detail-item">👨‍⚖️ Arbitre : <strong>${esc(x.referee)}</strong></div>` : "",
+                x.ht && x.ht.home != null ? `<div class="detail-item">⏱️ Mi-temps : <strong>${x.ht.home} - ${x.ht.away}</strong></div>` : ""
+            ].join("");
+
+            return `
+            <div class="match-card ${isLive ? "live" : ""} ${expanded.has(x.id) ? "expanded" : ""}" data-id="${x.id}">
+                <div class="match-main">
+                    <div class="team">${logo(x.homeLogo, x.home)}${esc(x.home)}</div>
+                    <div class="score-box">
+                        <div class="score">${showScore ? `${x.scoreHome} - ${x.scoreAway}` : "VS"}</div>
+                        <div class="match-time">${isLive ? `<span class="minute-badge">● ${liveClock(x).label}</span>` : x.status === "FINISHED" ? "Terminé" : kickoff(x)}</div>
+                        ${isLive ? `<div class="progress"><div style="width:${liveClock(x).pct}%"></div></div>` : ""}
+                    </div>
+                    <div class="team away">${esc(x.away)}${logo(x.awayLogo, x.away)}</div>
+                </div>
+                <div class="match-details">
+                    <div class="details-grid">
+                        <div class="detail-item">🏆 Compétition: <strong>${esc(c.name)}</strong></div>
+                        <div class="detail-item">📍 Région: <strong>${esc(c.region)}</strong></div>
+                        ${extra}
+                    </div>
+                    <div class="section-title">Fil du match</div>
+                    <div class="events-list">${eventsHTML}</div>
+                    ${videoFor(x)}
+                    ${lu}
+                    <div class="section-title">Statistiques</div>
+                    ${bars}
+                    <div style="margin-top:10px"><button class="follow-btn" data-id="${x.id}">${followed.has(x.id) ? "⭐ Match suivi" : "☆ Suivre ce match (alertes)"}</button></div>
+                </div>
+            </div>`;
+        }
+
+        function render() {
+            updateTicker();
+            const container = document.getElementById("competitions-container");
+            const q = document.getElementById("search").value.trim().toLowerCase();
+            const selectedRegion = document.getElementById("region-filter").value;
+
+            const list = matchesData.filter(x => {
+                const c = competitions[x.comp];
+                if (currentFilter !== "all" && x.status !== currentFilter) return false;
+                if (selectedRegion !== "all" && c.region !== selectedRegion) return false;
+                if (q && ![x.home, x.away, c.name].some(s => s.toLowerCase().includes(q))) return false;
+                return true;
+            });
+
+            const groups = {};
+            list.forEach(x => (groups[x.comp] ||= []).push(x));
+
+            const sortedKeys = Object.keys(groups).sort((a,b) => competitions[a].priority - competitions[b].priority);
+
+            if (!sortedKeys.length) {
+                container.innerHTML = `<div class="empty">${lastError ? "⚠️ " + esc(lastError) : matchesData.length ? "Aucun match trouvé pour vos critères de recherche." : "Aucun match aujourd'hui dans ces compétitions."}</div>`;
+                return;
+            }
+
+            container.innerHTML = sortedKeys.map(k => `
+                <section class="competition-group">
+                    <div class="competition-header">
+                        <span class="flag">${competitions[k].flag}</span>
+                        ${esc(competitions[k].name)}
+                        <span class="count">${groups[k].length} match(s)</span>
+                    </div>
+                    ${groups[k].map(renderMatch).join("")}
+                </section>
+            `).join("");
+
+            const liveCnt = matchesData.filter(x => x.status === "LIVE").length;
+            const upCnt = matchesData.filter(x => x.status === "UPCOMING").length;
+            const finCnt = matchesData.filter(x => x.status === "FINISHED").length;
+
+            document.getElementById("stats-bar").innerHTML = `
+                <span><strong>${matchesData.length}</strong> Matchs au total</span>
+                <span><strong>${liveCnt}</strong> En direct</span>
+                <span><strong>${upCnt}</strong> À venir</span>
+                <span><strong>${finCnt}</strong> Terminés</span>
+                <span><strong>${Object.keys(competitions).length}</strong> Ligues intégrées</span>
+            `;
+
+            document.getElementById("updated").textContent = lastError ? "⚠️ " + lastError : "Dernière mise à jour : " + new Date().toLocaleTimeString("fr-FR");
+        }
+
+        // Événements
+        document.getElementById("competitions-container").addEventListener("click", e => {
+            if (e.target.closest("a.goal-video")) return;
+            const fb = e.target.closest(".follow-btn");
+            if (fb) {
+                const id = Number(fb.dataset.id);
+                if (followed.has(id)) followed.delete(id); else followed.add(id);
+                render();
+                return;
+            }
+            const card = e.target.closest(".match-card");
+            if (!card) return;
+            const id = Number(card.dataset.id);
+            expanded.has(id) ? expanded.delete(id) : expanded.add(id);
+            card.classList.toggle("expanded");
+            if (expanded.has(id)) { loadStats(id); loadVideos(); }
+        });
+
+        document.getElementById("filters").addEventListener("click", e => {
+            const btn = e.target.closest("button");
+            if (!btn) return;
+            document.querySelectorAll("#filters button").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            currentFilter = btn.dataset.filter;
+            render();
+        });
+
+        document.getElementById("region-filter").addEventListener("change", render);
+        document.getElementById("search").addEventListener("input", render);
+
+        // Alertes de buts : toujours actives (non désactivables)
+        async function askNotifPermission(manual) {
+            if (!("Notification" in window)) { if (manual) showToast("Alertes actives dans la page (notifications système non supportées)"); return; }
+            if (Notification.permission === "default") { try { await Notification.requestPermission(); } catch (e) {} }
+            if (manual) showToast(Notification.permission === "denied" ? "Autorisez les notifications du site dans les réglages du navigateur" : "Alertes de buts actives");
+        }
+        document.addEventListener("click", () => askNotifPermission(false), { once: true });
+
+        // ===== BANDEAU DYNAMIQUE : infos du football mondial =====
+        let tickerSig = "";
+        function tickerItems() {
+            const items = [];
+            const flag = k => (competitions[k] ? competitions[k].flag : "⚽");
+            const cname = k => (competitions[k] ? competitions[k].name.replace(/ \(.*\)$/, "") : "");
+            const live = matchesData.filter(m => m.status === "LIVE");
+            const done = matchesData.filter(m => m.status === "FINISHED").sort((a, b) => new Date(b.start) - new Date(a.start));
+            const next = matchesData.filter(m => m.status === "UPCOMING" && !NOT_PLAYED[m.code] && new Date(m.start) > Date.now()).sort((a, b) => new Date(a.start) - new Date(b.start));
+
+            const score = m => `<span class="t-score">${m.scoreHome} - ${m.scoreAway}</span>`;
+            const line = (m, tag) => `<span class="ticker-item">${flag(m.comp)} <span class="t-comp">${esc(cname(m.comp))}</span> ${tag} ${esc(m.home)} ${score(m)} ${esc(m.away)}</span>`;
+
+            live.forEach(m => items.push(line(m, `<span class="t-live">● ${liveClock(m).label}</span>`)));
+
+            // Derniers buts marqués
+            live.forEach(m => {
+                const g = [...m.events].reverse().find(e => e.goal);
+                if (g) items.push(`<span class="ticker-item">⚽ <span class="t-info">BUT</span> ${esc(g.who || "")} ${g.min}' — ${esc(m.home)} ${m.scoreHome}-${m.scoreAway} ${esc(m.away)}</span>`);
+            });
+
+            done.slice(0, 15).forEach(m => items.push(line(m, "<span class=\"t-comp\">Terminé</span>")));
+
+            next.slice(0, 15).forEach(m => items.push(`<span class="ticker-item">${flag(m.comp)} <span class="t-comp">${esc(cname(m.comp))}</span> <span class="t-info">${kickoff(m)}</span> ${esc(m.home)} vs ${esc(m.away)}</span>`));
+
+            // Chiffres du jour
+            if (matchesData.length) {
+                const goals = matchesData.reduce((n, m) => n + (m.status === "UPCOMING" ? 0 : m.scoreHome + m.scoreAway), 0);
+                const comps = new Set(matchesData.map(m => m.comp)).size;
+                items.push(`<span class="ticker-item">🌍 <span class="t-info">${matchesData.length}</span> matchs dans <span class="t-info">${comps}</span> compétitions aujourd'hui</span>`);
+                items.push(`<span class="ticker-item">⚽ <span class="t-info">${goals}</span> buts marqués dans le monde aujourd'hui</span>`);
+                const top = matchesData.filter(m => m.status !== "UPCOMING").sort((a, b) => (b.scoreHome + b.scoreAway) - (a.scoreHome + a.scoreAway))[0];
+                if (top && top.scoreHome + top.scoreAway >= 4) items.push(`<span class="ticker-item">🔥 Match à buts : ${esc(top.home)} ${top.scoreHome}-${top.scoreAway} ${esc(top.away)}</span>`);
+            }
+            if (!items.length) items.push(`<span class="ticker-item">${lastError ? "⚠️ " + esc(lastError) : "Aucun match mondial à afficher pour le moment"}</span>`);
+            return items;
+        }
+
+        function updateTicker() {
+            const track = document.getElementById("ticker-track");
+            if (!track) return;
+            const html = tickerItems().join("");
+            if (html === tickerSig) return; // évite de relancer l'animation si rien n'a changé
+            tickerSig = html;
+            track.innerHTML = html + html; // contenu doublé pour un défilement continu
+            const w = track.scrollWidth / 2;
+            track.style.setProperty("--ticker-duration", Math.max(30, w / 70) + "s"); // ~70 px/s
+        }
+
+        // Initialisation + mises à jour automatiques
+        document.getElementById("competitions-container").innerHTML = `<div class="empty">Chargement des matchs…</div>`;
+        refreshAll("manual");
+        setInterval(() => refreshAll("live"), CONFIG.LIVE_REFRESH_MS);
+        setInterval(() => refreshAll("day"), CONFIG.DAY_REFRESH_MS);
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshAll("manual"); });
+    </script>
+</body>
+</html>
